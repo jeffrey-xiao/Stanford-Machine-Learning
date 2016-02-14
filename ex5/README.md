@@ -1,1 +1,1 @@
-# Support Vector Machines
+# Regularized Linear Regression And Bias Variance
