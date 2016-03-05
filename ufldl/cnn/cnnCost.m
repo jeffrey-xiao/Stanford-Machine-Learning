@@ -71,10 +71,42 @@ activations = zeros(convDim,convDim,numFilters,numImages);
 % subsampled activations
 activationsPooled = zeros(outputDim,outputDim,numFilters,numImages);
 
-%%% YOUR CODE HERE %%%
+% CONVOLUTION LAYER
+value = zeros(convDim, convDim, numFilters, numImages);
+conv = zeros(convDim, convDim, numFilters, numImages);
+
+filterArea = filterDim * filterDim;
+
+for imageNum = 1:numImages
+  image = images(:, :, imageNum);
+  for filterNum = 1:numFilters
+    filterTheta = Wc(:, :, filterNum);
+    filterTheta = rot90(filterTheta, 2);
+     
+    value(:, :, filterNum, imageNum) = conv2(image, filterTheta, 'valid') + bc(filterNum);
+    conv(:, :, filterNum, imageNum) = sigmoid(value(:, :, filterNum, imageNum));
+  end
+end
+
+% POOLING LAYER
+
+poolArea = poolDim * poolDim;
+
+for imageNum = 1:numImages
+  image = images(:, :, imageNum);
+  for filterNum = 1:numFilters
+    pooledLayer = conv2(image, ones(poolDim, poolDim) / poolArea, 'valid');
+    for x = 1:poolDim:convDim
+      for y = 1:poolDim:convDim
+        activationsPooled((x - 1) / poolDim + 1, (y - 1) / poolDim + 1, filterNum, imageNum) = pooledLayer(x, y);
+      end
+    end
+  end
+end
 
 % Reshape activations into 2-d matrix, hiddenSize x numImages,
 % for Softmax layer
+
 activationsPooled = reshape(activationsPooled,[],numImages);
 
 %% Softmax Layer
@@ -85,9 +117,17 @@ activationsPooled = reshape(activationsPooled,[],numImages);
 
 % numClasses x numImages for storing probability that each image belongs to
 % each class.
-probs = zeros(numClasses,numImages);
+probs = zeros(numClasses, numImages);
 
-%%% YOUR CODE HERE %%%
+probs = sigmoid(Wd * activationsPooled + bd);
+
+
+activationsSoftmax = Wd * activationsPooled + repmat(bd, 1, numImages);
+% activationsSoftmax = bsxfun(@plus, Wd * activationsPooledReshaped, bd);
+activationsSoftmax = bsxfun(@minus, activationsSoftmax, max(activationsSoftmax));
+activationsSoftmax = exp(activationsSoftmax);
+probs1 = bsxfun(@rdivide, activationsSoftmax, sum(activationsSoftmax));
+
 
 %%======================================================================
 %% STEP 1b: Calculate Cost
@@ -96,8 +136,9 @@ probs = zeros(numClasses,numImages);
 %  results in cost.
 
 cost = 0; % save objective into cost
+y = speye(10)(labels,:)';
 
-%%% YOUR CODE HERE %%%
+cost = - sum(sum(y .* (log(probs + 1e-8)) + (1 - y) .* (log(1 - probs + 1e-8))));
 
 % Makes predictions given probs and returns without backproagating errors.
 if pred
@@ -117,7 +158,29 @@ end;
 %  Use the kron function and a matrix of ones to do this upsampling 
 %  quickly.
 
-%%% YOUR CODE HERE %%%
+softmaxError = (probs - y);
+
+pooledError = (Wd' * softmaxError);
+pooledError = reshape(pooledError, outputDim, outputDim, numFilters, numImages);
+
+poolingError = zeros(convDim, convDim, numFilters, numImages);
+unpoolingFilter = ones(poolDim, poolDim) / poolArea;
+
+for imageNum=1:numImages
+  for filterNum=1:numFilters
+    currPoolError = pooledError(:, :, filterNum, imageNum);
+    poolingError(:, :, filterNum, imageNum) = kron(currPoolError, unpoolingFilter);
+  end
+end
+
+convError = poolingError .* sigmoidGrad(value);
+
+%for imageNum=1:numImages
+%  for filterNum=1:numFilters
+%    currConvError = poolingError(:, :, filterNum, imageNum)
+%    convError(:, :, filterNum, imageNum) = currConvError .* sigmoidGrad(value(:, :, imageNum, filterNum));
+%  end
+%end
 
 %%======================================================================
 %% STEP 1d: Gradient Calculation
@@ -127,9 +190,33 @@ end;
 %  a filter in the convolutional layer, convolve the backpropagated error
 %  for that filter with each image and aggregate over images.
 
-%%% YOUR CODE HERE %%%
+Wd_grad = softmaxError * activationsPooled';
+bd_grad = sum(softmaxError, 2);
+
+Wc_grad = zeros(size(Wc));
+bc_grad = zeros(size(bc));
+
+for filterNum=1:numFilters
+  e = convError(:, :, filterNum, :);
+  bc_grad(filterNum) = sum(e(:));
+end
+
+for filterNum=1:numFilters
+  for imageNum=1:numImages
+    e = convError(:, :, filterNum, imageNum);
+    Wc_grad(:, :, filterNum) += conv2(images(:, :, imageNum), rot90(e, 2), 'valid');
+  end
+end
+
 
 %% Unroll gradient into grad vector for minFunc
 grad = [Wc_grad(:) ; Wd_grad(:) ; bc_grad(:) ; bd_grad(:)];
+end
 
+function ret = sigmoid(x)
+  ret = 1 ./ (1 + exp(-x));
+end
+
+function ret  = sigmoidGrad (x)
+  ret = sigmoid(x) .* (1 - sigmoid(x));
 end

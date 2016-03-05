@@ -30,6 +30,15 @@ pooledFeatures = zeros(convolvedDim / poolDim, ...
 %   Use mean pooling here.
 
 %%% YOUR CODE HERE %%%
+for imageNum = 1:numImages
+  for filterNum = 1:numFilters
+    for x = 1:poolDim:convolvedDim
+      for y = 1:poolDim:convolvedDim
+        pooledFeatures((x - 1) / poolDim + 1, (y - 1) / poolDim + 1, filterNum, imageNum) = sum(sum(convolvedFeatures(x:x+poolDim-1, y:y+poolDim-1))) / (poolDim * poolDim);
+      end
+    end
+  end
+end
 
 end
 

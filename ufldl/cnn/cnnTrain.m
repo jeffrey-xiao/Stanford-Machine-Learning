@@ -16,7 +16,7 @@
 imageDim = 28;
 numClasses = 10;  % Number of classes (MNIST images fall into 10 classes)
 filterDim = 9;    % Filter size for conv layer
-numFilters = 20;   % Number of filters for conv layer
+numFilters = 20;  % Number of filters for conv layer
 poolDim = 2;      % Pooling dimension, (should divide imageDim-filterDim+1)
 
 % Load MNIST Train
@@ -46,8 +46,8 @@ if DEBUG
     db_numFilters = 2;
     db_filterDim = 9;
     db_poolDim = 5;
-    db_images = images(:,:,1:10);
-    db_labels = labels(1:10);
+    db_images = images(:,:,1:9);
+    db_labels = labels(1:9);
     db_theta = cnnInitParams(imageDim,db_filterDim,db_numFilters,...
                 db_poolDim,numClasses);
     
@@ -68,7 +68,7 @@ if DEBUG
     % less than 1e-9.
     disp(diff); 
  
-    assert(diff < 1e-9,...
+    assert(diff < 1e-6,...
         'Difference too large. Check your gradient computation again');
     
 end;
@@ -76,6 +76,7 @@ end;
 %%======================================================================
 %% STEP 3: Learn Parameters
 %  Implement minFuncSGD.m, then train the model.
+disp("Begin learning paramters");
 
 options.epochs = 3;
 options.minibatch = 256;

@@ -14,7 +14,7 @@
 
 imageDim = 28;         % image dimension
 
-filterDim = 8;          % filter dimension
+filterDim = 8;          % filter dimensionf
 numFilters = 100;         % number of feature maps
 
 numImages = 60000;    % number of images
@@ -50,7 +50,7 @@ convolvedFeatures = cnnConvolve(filterDim, numFilters, convImages, W, b);
 %  activations from the sparse autoencoder
 
 % For 1000 random points
-for i = 1:1000   
+for i = 1:1000 
     filterNum = randi([1, numFilters]);
     imageNum = randi([1, 8]);
     imageRow = randi([1, imageDim - filterDim + 1]);
