@@ -130,7 +130,7 @@ probs = sigmoid(Wd * activationsPooled + bd);
 cost = 0; % save objective into cost
 y = speye(10)(labels,:)';
 
-cost = - sum(sum(y .* (log(probs + 1e-8)) + (1 - y) .* (log(1 - probs + 1e-8))));
+cost = - sum(sum(y .* (log(probs + 1e-8)) + (1 - y) .* (log(1 - probs + 1e-8)))) / numImages;
 
 % Makes predictions given probs and returns without backproagating errors.
 if pred
@@ -150,7 +150,7 @@ end;
 %  Use the kron function and a matrix of ones to do this upsampling 
 %  quickly.
 
-softmaxError = (probs - y);
+softmaxError = (probs - y) / numImages;
 
 pooledError = (Wd' * softmaxError);
 pooledError = reshape(pooledError, outputDim, outputDim, numFilters, numImages);
