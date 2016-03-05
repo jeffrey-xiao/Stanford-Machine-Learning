@@ -93,9 +93,9 @@ end
 poolArea = poolDim * poolDim;
 
 for imageNum = 1:numImages
-  image = images(:, :, imageNum);
   for filterNum = 1:numFilters
-    pooledLayer = conv2(image, ones(poolDim, poolDim) / poolArea, 'valid');
+    convLayer = conv(:, :, filterNum, imageNum);
+    pooledLayer = conv2(convLayer, ones(poolDim, poolDim) / poolArea, 'valid');
     for x = 1:poolDim:convDim
       for y = 1:poolDim:convDim
         activationsPooled((x - 1) / poolDim + 1, (y - 1) / poolDim + 1, filterNum, imageNum) = pooledLayer(x, y);
@@ -120,14 +120,6 @@ activationsPooled = reshape(activationsPooled,[],numImages);
 probs = zeros(numClasses, numImages);
 
 probs = sigmoid(Wd * activationsPooled + bd);
-
-
-activationsSoftmax = Wd * activationsPooled + repmat(bd, 1, numImages);
-% activationsSoftmax = bsxfun(@plus, Wd * activationsPooledReshaped, bd);
-activationsSoftmax = bsxfun(@minus, activationsSoftmax, max(activationsSoftmax));
-activationsSoftmax = exp(activationsSoftmax);
-probs1 = bsxfun(@rdivide, activationsSoftmax, sum(activationsSoftmax));
-
 
 %%======================================================================
 %% STEP 1b: Calculate Cost
