@@ -106,7 +106,6 @@ end
 
 % Reshape activations into 2-d matrix, hiddenSize x numImages,
 % for Softmax layer
-
 activationsPooled = reshape(activationsPooled,[],numImages);
 
 %% Softmax Layer

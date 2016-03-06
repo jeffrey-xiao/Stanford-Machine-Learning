@@ -71,6 +71,7 @@ for e = 1:epochs
         theta = theta - velocity;
         
         fprintf('Epoch %d: Cost on iteration %d is %f\n',e,it,cost);
+        fprintf('%d out of %d\n', s, m);
         fflush(stdout);
     end;
 
